@@ -23,11 +23,11 @@ async def reload(ctx, extension):
     client.load_extension(f'cogs.{extension}')
 
 for filename in os.listdir('./cogs'):
-    if filename.endswith('.py') and filename != "maze.py":
+    if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
 
 @client.command()
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
-client.run('')
+client.run('NzY4OTYwMTM2NDMzMzY5MDg4.X5ID7w.tOzbA6pN5mQ-J29OjU9pEPSvBsU')

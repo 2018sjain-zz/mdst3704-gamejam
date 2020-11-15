@@ -15,17 +15,18 @@ class Voice(commands.Cog):
         self.wires_data = (("A", "E"), ("B", "C"))
         self.wires_status = list()
         self.riddle_data = ("What has many teeth, but cannot bite?", ("comb", "Comb", "brush", "Brush"))
-        self.song_data = ("./assets/stayingalive.mp3", ("staying", "Staying", "Stayin","stayin"))
+        self.song_data = ("./assets/stayingalive.mp3", ("staying", "Staying", "Stayin","stayin", "stayin'", "Stayin'"))
         self.panning_data = 0
         self.panning_status = 0
         self.pitch_left = 0
         self.pitch_right = 0
         self.game_status = False
+        self.completion = list((False, False, False, False, False, False))
 
     @commands.command()
     async def join(self, ctx):
         self.game_status = True
-        self.time = 10
+        self.time = 15
         self.current_game = "entrance"
         self.gears_data = random.randint(1, 4)
         self.panning_data = random.randint(1, 7)
@@ -33,6 +34,8 @@ class Voice(commands.Cog):
         self.pitch_left = random.randint(1, 7)
         self.pitch_right = random.randint(1, 7)
         self.wires_status = list()
+        self.completion = list((False, False, False, False, False, False))
+        # self.completion = (True, True, True, True, True, True)
         channel = ctx.author.voice.channel
         await channel.connect()
         await ctx.send("Command to runner checking in. Confirming audio and visual. Right, everything looks good. You were already briefed but I’ll go over it again. Basically 2 weeks ago, the settlement stopped receiving auxiliary power from this nuclear plant. Our batteries and generators are running low, the team camped there hasn’t checked in for a few days. They said waste collection was becoming an issue. We need you to head in and make sure everything is alright. Fingers crossed, but in the event that there was a build up of radioactive waste, you are gonna want to limit your time in the building. Just head inside, check with the team, and do what you can to get this place running.")
@@ -75,7 +78,8 @@ class Voice(commands.Cog):
 
         if self.current_game == "entrance":
             await ctx.send(file=discord.File('./assets/entrance.png'))
-            await ctx.send('This is the entrance.')
+            await ctx.send('The door was unlocked, weird. Nothing seems too out of the ordinary but still no crew. They made their living quarters deeper in the building by the kitchen,  but I feel like there should have been someone stationed here.')
+            await ctx.send("Commands: /getout")
         elif self.current_game == "gears":
             await ctx.send(file=discord.File('./assets/gears.png'))
             await ctx.send('This is the gear room, but something sounds off in here. Like, more so than usual. Looks like you have access to four of the major gear networks labeled 1, 2, 3, and 4. Maybe if you /crank the gears you can figure out which one to /repair. Careful though, making too many changes might draw... unwanted attention.')
@@ -128,7 +132,7 @@ class Voice(commands.Cog):
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
     async def reduce_time(self, ctx, tyme):
-        self.time -= tyme
+        self.time = round(self.time - tyme, 2)
         if self.time <= 0:
             if ctx.voice_client.is_playing():
                 ctx.voice_client.stop()
@@ -162,6 +166,31 @@ class Voice(commands.Cog):
         await ctx.send(f"You have {self.time} hours left.")
 
     @commands.command()
+    async def getout(self, ctx):
+        if self.current_game != "entrance":
+            await ctx.send("Wrong command! You are not in the Entrance Room.")
+            return
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        win_check = True
+        for each in self.completion:
+            win_check = win_check and each
+
+        if win_check:
+            await ctx.send("Power is back up, but I think you pissed it off. Leave.")
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/finish.wav"))
+            ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+            while ctx.voice_client.is_playing():
+                time.sleep(.5)
+            await ctx.send(file=discord.File('./assets/win.jpg'))
+            await self.leave(ctx)
+        else:
+            await ctx.send("You didn't repair the factory, but at least you got out with your life. Better luck next time.")
+            await self.leave(ctx)
+
+    @commands.command()
     async def crank(self, ctx, gear_number):
         if self.current_game != "gears":
             await ctx.send("Wrong command! You are not in the Gears Room.")
@@ -186,6 +215,7 @@ class Voice(commands.Cog):
             ctx.voice_client.stop()
 
         if int(gear_number) == self.gears_data:
+            self.completion[0] = True
             await ctx.send("Thats it! Finally, we should move on. I don’t want you in here any longer than you have to be.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/gears_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -225,6 +255,7 @@ class Voice(commands.Cog):
                 self.wires_status.append((terminal_one, terminal_two))
                 await ctx.send("Great job! You need to find one more wire pair.")
             elif len(self.wires_status) == 1:
+                self.completion[1] = True
                 self.wires_status.append((terminal_one, terminal_two))
                 await ctx.send("Nice! A model electrician you are, hopefully next will be something less, shocking. Get it? Just trying to lighten the mood. Try not to get gore on your shoes on the way out.")
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/wires_right.wav"))
@@ -255,6 +286,7 @@ class Voice(commands.Cog):
             ctx.voice_client.stop()
 
         if answer in self.riddle_data[1]:
+            self.completion[2] = True
             await ctx.send("Great, that's the first step down. Now we should move on to the rest of the factory.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/security_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -275,6 +307,7 @@ class Voice(commands.Cog):
             ctx.voice_client.stop()
 
         if answer in self.song_data[1]:
+            self.completion[3] = True
             await ctx.send("Yeah, that's right! Hey pick up the radio for me. I think I can use it for something.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/song_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -333,6 +366,7 @@ class Voice(commands.Cog):
             ctx.voice_client.stop()
 
         if self.panning_status == self.panning_data:
+            self.completion[4] = True
             await ctx.send("Looking good! Or rather… bad. Flip those three switches on the upper left and… TADA! Panel reset. Granted, it's a little quieter in this room so try not to tip anything over on the way out.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -435,6 +469,7 @@ class Voice(commands.Cog):
             ctx.voice_client.stop()
 
         if self.pitch_left == self.pitch_right:
+            self.completion[5] = True
             await ctx.send("Perfect Pitch! We are on the right track to getting your sorry butt out of here. Keep Moving.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/pitch_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
