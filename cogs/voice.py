@@ -125,6 +125,7 @@ class Voice(commands.Cog):
         await ctx.send("Command to runner checking in. Confirming audio and visual. Right, everything looks good. You were already briefed but I’ll go over it again. Basically 2 weeks ago, the settlement stopped receiving auxiliary power from this nuclear plant. Our batteries and generators are running low, the team camped there hasn’t checked in for a few days. They said waste collection was becoming an issue. We need you to head in and make sure everything is alright. Fingers crossed, but in the event that there was a build up of radioactive waste, you are gonna want to limit your time in the building. Just head inside, check with the team, and do what you can to get this place running.")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/join.wav"))
         ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+        await ctx.send("*Note: Throughout your gameplay, if the bot doesn't immediately respond, please be patient. It may take 5-10 seconds to load the correct assets. If nothing happens for more than 10 seconds, type /leave and rejoin. This should rarely happen.*")
         await self.entrance(ctx)
 
     @commands.command()
@@ -375,7 +376,7 @@ class Voice(commands.Cog):
 
         await ctx.send(file=discord.File('./assets/maps/security.png'))
 
-        await ctx.send("This is the security hub, looks like you are gonna have to unlock this place before you can go anywhere else. There's probably a way to shut down the SOS sequence. Look there, on that screen, it looks like a /riddle.")
+        await ctx.send("This is the Security hub. But, it looks like everything past here is in emergency lockdown. Check the wall of cameras to your right. About half of them are around, and the red emergency lights aren't helping, but I can't see any members of the reactor team. We need to get you in there. There is supposed to be a way to shut down this SOS sequence. Um, I think it was a password. On that screen. Do you see that? It looks like a /riddle. I knew these guys were nerds. See if you can't figure it out.")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/security.wav"))
         ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
@@ -870,6 +871,10 @@ class Voice(commands.Cog):
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
+        if int(stack_number) > 5 or int(stack_number) < 1:
+            await ctx.send("Please select a valid pipe (1, 2, 3, 4, 5)!")
+            return
+
         filename = "./assets/steam.mp3"
         if int(stack_number) in self.smokestack_data:
             filename = "./assets/steam_down.mp3"
@@ -886,6 +891,10 @@ class Voice(commands.Cog):
 
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
+
+        if int(stack_number) > 5 or int(stack_number) < 1:
+            await ctx.send("Please select a valid pipe (1, 2, 3, 4, 5)!")
+            return
 
         if int(stack_number) in self.smokestack_data:
 
