@@ -26,6 +26,7 @@ class Voice(commands.Cog):
                            "wiring",
                            "smokestack",
                            "chemistry lab")
+        self.games_select = list()
 
         self.completion = list()
         self.time = 0
@@ -79,8 +80,10 @@ class Voice(commands.Cog):
         # Game Information
         self.game_status = True
         self.current_game = 0
+        self.games_select = random.sample(self.games_data[2:], 3)
+        print(self.games_select)
         self.completion = list((False, False, False, False, False, False, False, False))
-        self.time = 15
+        self.time = 12
 
         # Security
         self.riddle_select = random.randint(0, len(self.riddle_data) - 1)
@@ -275,11 +278,58 @@ class Voice(commands.Cog):
 
     def check_finish(self):
 
-        win_check = True
-        for each in self.completion:
-            win_check = win_check and each
+        game_number = {"entrance": 0,
+                       "security": 1,
+                       "worker facilities": 2,
+                       "gears": 3,
+                       "switchboard left": 4,
+                       "switchboard right": 5,
+                       "wiring": 6,
+                       "smokestack": 7,
+                       "chemistry lab": 8}
+
+        win_check = self.completion[0]
+        for game in self.games_select:
+            index = game_number[game] - 1
+            win_check = win_check and self.completion[index]
 
         return win_check
+
+    @commands.command()
+    async def rooms(self, ctx):
+
+        if self.completion[0] == False:
+            await ctx.send("Head to Security so you can check which rooms need fixing!")
+            return
+
+        game_number = {"entrance": 0,
+                       "security": 1,
+                       "worker facilities": 2,
+                       "gears": 3,
+                       "switchboard left": 4,
+                       "switchboard right": 5,
+                       "wiring": 6,
+                       "smokestack": 7,
+                       "chemistry lab": 8}
+
+        await ctx.send("**Assigned Rooms**:")
+
+        if self.completion[0]:
+            await ctx.send(":white_check_mark: ~~Security~~")
+        else: await ctx.send(":heavy_check_mark: Security")
+
+        if self.completion[game_number[self.games_select[0]] - 1]:
+            await ctx.send(":white_check_mark: ~~" + self.games_select[0].title() + "~~")
+        else: await ctx.send(":heavy_check_mark: " + self.games_select[0].title())
+
+        if self.completion[game_number[self.games_select[1]] - 1]:
+            await ctx.send(":white_check_mark: ~~" + self.games_select[1].title() + "~~")
+        else: await ctx.send(":heavy_check_mark: " + self.games_select[1].title())
+
+        if self.completion[game_number[self.games_select[2]] - 1]:
+            await ctx.send(":white_check_mark: ~~" + self.games_select[2].title() + "~~")
+        else: await ctx.send(":heavy_check_mark: " + self.games_select[2].title())
+
 
     #####################
     #   ENTRANCE ROOM   #
@@ -346,9 +396,13 @@ class Voice(commands.Cog):
 
             self.completion[self.current_game - 1] = True
 
-            await ctx.send("Great, that's the first step down. Now we should move on to the rest of the factory.")
-            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/security_right.wav"))
+            await ctx.send("Great, that ended the lockdown. It should at least open the doors and stop the emergency lights. Go ahead into the Main Generator room. There's still no crew... Something is definitely going on. Head to the base of the second reactor. There will be a touch screen that will let you know which rooms are having issues. My team and I will walk you through how to fix them, but be careful. Even though we can't see any crew, I have a weird feeling that you're not alone.")
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/security_right.mp3"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+            await self.rooms(ctx)
+
+            await ctx.send("*Use /rooms to keep track of which rooms you need to fix or have already fixed!*")
 
         else:
 
@@ -400,7 +454,7 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/song_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+            if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -479,7 +533,7 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/gears_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+            if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -576,7 +630,7 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+            if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -602,7 +656,7 @@ class Voice(commands.Cog):
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning_right.wav"))
         ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-        if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+        if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
     #############################
     #     SWITCHBOARD RIGHT     #
@@ -705,7 +759,7 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/pitch_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+            if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -769,7 +823,7 @@ class Voice(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/wires_right.wav"))
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+                if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         elif terminal_one in active_wires and terminal_two in active_wires:
             filename = "./assets/wires/wires_ssf.mp3"
@@ -849,7 +903,7 @@ class Voice(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/smoke2.wav"))
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+                if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -944,7 +998,7 @@ class Voice(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem3.wav"))
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
                 self.completion[self.current_game - 1] = True
-                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+                if self.check_finish(): await ctx.send("**Assigned rooms completed! Head to the entrance and /getout!**")
             elif self.chemistry_status == 2:
                 await ctx.send("Perfect, now just one last reaction, and you'll be all set.")
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem1.wav"))
