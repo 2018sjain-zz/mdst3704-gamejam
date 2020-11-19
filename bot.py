@@ -30,4 +30,4 @@ for filename in os.listdir('./cogs'):
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency * 1000)}ms')
 
-client.run('NzY4OTYwMTM2NDMzMzY5MDg4.X5ID7w.fr7X08Nq_8JHXEsubZCkWXejCh0')
+client.run('NzY4OTYwMTM2NDMzMzY5MDg4.X5ID7w.xc46e5KcfrTu5XhzHhjf50FkGE4')

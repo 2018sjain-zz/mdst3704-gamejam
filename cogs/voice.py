@@ -23,16 +23,27 @@ class Voice(commands.Cog):
                            "gears",
                            "switchboard left",
                            "switchboard right",
-                           "wiring")
+                           "wiring",
+                           "smokestack",
+                           "chemistry lab")
+
         self.completion = list()
         self.time = 0
 
         # Security - ADD
-        self.riddle_data = list((("What has many teeth, but cannot bite?", ("comb","Comb","brush","Brush")), None))
+        self.riddle_data = list((("What has many teeth, but cannot bite?", ("comb","Comb","brush","Brush")),
+                                 ("What has to be broken before you can use it?", ("egg","Egg")),
+                                 ("I’m tall when I’m young, and I’m short when I’m old. What am I?", ("candle","Candle")),
+                                 ("What is full of holes but still holds water?", ("sponge","Sponge")),
+                                 ("What gets wet while drying?", ("towel","Towel"))))
         self.riddle_select = 0
 
         # Worker Facilities - ADD
-        self.song_data = list((("./assets/stayingalive.mp3", ("staying", "Staying","stayin", "Stayin","stayin'", "Stayin'")), None))
+        self.song_data = list((("./assets/songs/stayingalive.mp3", ("staying", "Staying","stayin", "Stayin", "stayin'", "Stayin'")),
+                               ("./assets/songs/allstar-cut.mp3", ("all", "All", "allstar", "Allstar")),
+                               ("./assets/songs/monstermash-cut.mp3", ("monster", "Monster", "monstermash", "Monstermash")),
+                               ("./assets/songs/radioactive-cut.mp3", ("radioactive", "Radioactive")),
+                               ("./assets/songs/hero-cut.mp3", ("I", "i","hero", "Hero")),))
         self.song_select = 0
 
         # Gears
@@ -50,6 +61,14 @@ class Voice(commands.Cog):
         self.wiring_data = list()
         self.wiring_status = list()
 
+        # Smokestack
+        self.smokestack_data = list()
+        self.smokestack_status = list()
+
+        # Chemistry Lab
+        self.chemistry_data = list()
+        self.chemistry_status = 0
+
     def random_pairs(self, alphabet):
         random.shuffle(alphabet)
         return list(((alphabet[0], alphabet[1]), (alphabet[2], alphabet[3])))
@@ -60,14 +79,14 @@ class Voice(commands.Cog):
         # Game Information
         self.game_status = True
         self.current_game = 0
-        self.completion = list((False, False, False, False, False, False))
+        self.completion = list((False, False, False, False, False, False, False, False))
         self.time = 15
 
         # Security
-        self.riddle_select = random.randint(0, len(self.riddle_data) - 2)
+        self.riddle_select = random.randint(0, len(self.riddle_data) - 1)
 
         # Worker Facilities
-        self.song_select = random.randint(0, len(self.song_data) - 2)
+        self.song_select = random.randint(0, len(self.song_data) - 1)
 
         # Gears
         self.gears_data = random.randint(1, 4)
@@ -84,6 +103,16 @@ class Voice(commands.Cog):
         alphabet = list(map(chr, range(65, 65+5)))
         self.wiring_data = self.random_pairs(alphabet)
         self.wiring_status = list()
+
+        # Smokestack
+        uniques = list(range(1, 6))
+        random.shuffle(uniques)
+        self.smokestack_data = list((uniques[0], uniques[1]))
+        self.smokestack_status = list()
+
+        # Chemistry Lab
+        self.chemistry_data = list((random.randint(3, 5), random.randint(5, 8), random.randint(8, 10)))
+        self.chemistry_status = 0
 
         channel = ctx.author.voice.channel
         await channel.connect()
@@ -120,19 +149,23 @@ class Voice(commands.Cog):
                        "gears": 3,
                        "switchboard left": 4,
                        "switchboard right": 5,
-                       "wiring": 6}
+                       "wiring": 6,
+                       "smokestack": 7,
+                       "chemistry lab": 8}
 
         if game_number[game_name] > 1 and self.completion[0] != True:
             await ctx.send("You need to complete Security to access the rest of the factory!")
             return
 
-        mapping = {0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 2, 5: 3, 6: 3},
-                   1: {0: 1, 1: 0, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2},
-                   2: {0: 2, 1: 1, 2: 0, 3: 2, 4: 1, 5: 3, 6: 3},
-                   3: {0: 2, 1: 1, 2: 2, 3: 0, 4: 2, 5: 3, 6: 3},
-                   4: {0: 3, 1: 2, 2: 1, 3: 3, 4: 0, 5: 2, 6: 2},
-                   5: {0: 3, 1: 2, 2: 3, 3: 3, 4: 2, 5: 0, 6: 1},
-                   6: {0: 3, 1: 2, 2: 3, 3: 3, 4: 2, 5: 1, 6: 0}}
+        mapping = {0: {0: 0, 1: 1, 2: 2, 3: 2, 4: 2, 5: 3, 6: 3, 7: 3, 8: 3},
+                   1: {0: 1, 1: 0, 2: 1, 3: 1, 4: 1, 5: 2, 6: 2, 7: 2, 8: 2},
+                   2: {0: 2, 1: 1, 2: 0, 3: 2, 4: 1, 5: 3, 6: 3, 7: 3, 8: 4},
+                   3: {0: 2, 1: 1, 2: 2, 3: 0, 4: 3, 5: 2, 6: 2, 7: 4, 8: 3},
+                   4: {0: 2, 1: 1, 2: 1, 3: 3, 4: 0, 5: 2, 6: 2, 7: 1, 8: 2},
+                   5: {0: 3, 1: 2, 2: 3, 3: 2, 4: 2, 5: 0, 6: 1, 7: 3, 8: 2},
+                   6: {0: 3, 1: 2, 2: 3, 3: 2, 4: 2, 5: 1, 6: 0, 7: 3, 8: 2},
+                   7: {0: 3, 1: 2, 2: 3, 3: 4, 4: 1, 5: 3, 6: 3, 7: 0, 8: 1},
+                   8: {0: 3, 1: 2, 2: 4, 3: 3, 4: 2, 5: 2, 6: 2, 7: 1, 8: 0}}
 
         prev_game = self.current_game
         self.current_game = game_number[game_name]
@@ -157,6 +190,10 @@ class Voice(commands.Cog):
             await self.switchboard_right(ctx)
         elif self.current_game == 6:
             await self.wiring(ctx)
+        elif self.current_game == 7:
+            await self.smokestack(ctx)
+        elif self.current_game == 8:
+            await self.chemistry_lab(ctx)
 
     async def reduce_time(self, ctx, reduced_time):
 
@@ -206,14 +243,52 @@ class Voice(commands.Cog):
 
         await ctx.send(f"You have {self.time} hours left.")
 
+    @commands.command()
+    async def map(self, ctx):
+
+        if self.current_game == 0:
+            await self.entrance(ctx)
+        elif self.current_game == 1:
+            await ctx.send(file=discord.File('./assets/maps/security.png'))
+            await ctx.send("\n**Commands**:\n/riddle {string}")
+        elif self.current_game == 2:
+            await ctx.send(file=discord.File('./assets/maps/worker.png'))
+            await ctx.send("\n**Commands**:\n/song {string}\n/replay")
+        elif self.current_game == 3:
+            await ctx.send(file=discord.File('./assets/maps/gears.png'))
+            await ctx.send("\n**Commands**:\n/crank {int}\n/repair {int}")
+        elif self.current_game == 4:
+            await ctx.send(file=discord.File('./assets/maps/switch_left.png'))
+            await ctx.send("\n**Commands**:\n/walk {left/right} {int}\n/open\n/skip *(only if needed)*")
+        elif self.current_game == 5:
+            await ctx.send(file=discord.File('./assets/maps/switch_right.png'))
+            await ctx.send("\n**Commands**:\n/slide {left/right} {up/down} {int}\n/pitch {left/right}\n/match")
+        elif self.current_game == 6:
+            await ctx.send(file=discord.File('./assets/maps/wiring.png'))
+            await ctx.send("\n**Commands**:\n/wires {char} {char}")
+        elif self.current_game == 7:
+            await ctx.send(file=discord.File('./assets/maps/smokestack.png'))
+            await ctx.send("\n**Commands**:\n/release {int}\n/flextape {int}")
+        elif self.current_game == 8:
+            await ctx.send(file=discord.File('./assets/maps/chemlab.png'))
+            await ctx.send("\n**Commands**:\n/listen {char}\n/count {char} {int}")
+
+    def check_finish(self):
+
+        win_check = True
+        for each in self.completion:
+            win_check = win_check and each
+
+        return win_check
+
     #####################
     #   ENTRANCE ROOM   #
     #####################
 
     async def entrance(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/entrance.png'))
-        await ctx.send("\n**Commands**:\n/goto {room}\n/getout")
+        await ctx.send(file=discord.File('./assets/maps/entrance.png'))
+        await ctx.send("\n**Commands**:\n/goto {room}\n/getout\n/map")
 
     @commands.command()
     async def getout(self, ctx):
@@ -225,13 +300,9 @@ class Voice(commands.Cog):
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
-        win_check = True
-        for each in self.completion:
-            win_check = win_check and each
+        if self.check_finish():
 
-        if win_check:
-
-            await ctx.send("Power is back up, but I think you pissed it off. Leave.")
+            await ctx.send("That's everything. Power is back up and we're getting charge. But I think you pissed it off. You should leave, runner. Now.")
 
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/finish.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -252,7 +323,7 @@ class Voice(commands.Cog):
 
     async def security(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/security.png'))
+        await ctx.send(file=discord.File('./assets/maps/security.png'))
 
         await ctx.send("This is the security hub, looks like you are gonna have to unlock this place before you can go anywhere else. There's probably a way to shut down the SOS sequence. Look there, on that screen, it looks like a /riddle.")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/security.wav"))
@@ -292,7 +363,7 @@ class Voice(commands.Cog):
 
     async def worker_facilities(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/worker.png'))
+        await ctx.send(file=discord.File('./assets/maps/worker.png'))
 
         await ctx.send("I think this is the kitchen. Most of the food in here is probably rotten though… hey what's that sound?")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/song1.wav"))
@@ -329,6 +400,8 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/song_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
+            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+
         else:
 
             await ctx.send("No, I don’t think that’s it. We should probably keep moving.")
@@ -355,7 +428,7 @@ class Voice(commands.Cog):
 
     async def gears(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/gears.png'))
+        await ctx.send(file=discord.File('./assets/maps/gears.png'))
 
         await ctx.send('This is the gear room, but something sounds off in here. Like, more so than usual. Looks like you have access to four of the major gear networks labeled 1, 2, 3, and 4. Maybe if you /crank the gears you can figure out which one to /repair. Careful though, making too many changes might draw... unwanted attention.')
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/gears.wav"))
@@ -372,6 +445,10 @@ class Voice(commands.Cog):
 
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
+
+        if int(gear_number) > 4 or int(gear_number) < 1:
+            await ctx.send("Please select a valid gear (1, 2, 3, 4)!")
+            return
 
         filename = "./assets/gear_faster.mp3"
         if int(gear_number) == self.gears_data:
@@ -390,6 +467,10 @@ class Voice(commands.Cog):
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
+        if int(gear_number) > 4 or int(gear_number) < 1:
+            await ctx.send("Please select a valid gear (1, 2, 3, 4)!")
+            return
+
         if int(gear_number) == self.gears_data:
 
             self.completion[self.current_game - 1] = True
@@ -397,6 +478,8 @@ class Voice(commands.Cog):
             await ctx.send("Thats it! Finally, we should move on. I don’t want you in here any longer than you have to be.")
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/gears_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
 
         else:
 
@@ -411,7 +494,7 @@ class Voice(commands.Cog):
 
     async def switchboard_left(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/switch_left.png'))
+        await ctx.send(file=discord.File('./assets/maps/switch_left.png'))
 
         await ctx.send("I think this is one of the switchboard rooms. At least, it was… most of the stuff here is torn apart. Luckily, The primary components are hidden behind those panels on the wall. Try to listen for which panel is putting out there error sound and fix it.")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning.wav"))
@@ -493,6 +576,8 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
+            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+
         else:
 
             await ctx.send("Nope, no sound, not flashing lights, no nothing. Make sure you replace the panel in case our “friend” gets any ideas about what to destroy next.")
@@ -517,13 +602,15 @@ class Voice(commands.Cog):
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/panning_right.wav"))
         ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
+        if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+
     #############################
     #     SWITCHBOARD RIGHT     #
     #############################
 
     async def switchboard_right(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/switch_right.png'))
+        await ctx.send(file=discord.File('./assets/maps/switch_right.png'))
 
         await ctx.send("Alright, Switchboard Right, we are looking for a sliding control panel. There it is, the required input is sending out a signal in the form of that sound, try to make the second sound match the pitch of the first one and that should be it!")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/pitch.wav"))
@@ -568,7 +655,7 @@ class Voice(commands.Cog):
             await ctx.send("Fix your command!")
             return
 
-        filename = "./assets/pitch"
+        filename = "./assets/pitch/pitch"
         if side == "left":
             filename += str(self.pitch_left)
         elif side == "right":
@@ -587,7 +674,7 @@ class Voice(commands.Cog):
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
 
-        filename = "./assets/pitch"
+        filename = "./assets/pitch/pitch"
         if side == "left":
             filename += str(self.pitch_left)
         elif side == "right":
@@ -618,6 +705,8 @@ class Voice(commands.Cog):
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/pitch_right.wav"))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
+            if self.check_finish(): await ctx.send("**All  rooms completed! Head to the entrance and /getout!**")
+
         else:
 
             await ctx.send("Your notes did say you were tone deaf… oh sorry, I shouldn't have said that. Try again, you got this!")
@@ -631,7 +720,7 @@ class Voice(commands.Cog):
 
     async def wiring(self, ctx):
 
-        await ctx.send(file=discord.File('./assets/wiring.png'))
+        await ctx.send(file=discord.File('./assets/maps/wiring.png'))
 
         await ctx.send("God… it's a mess in here. Is that, is that blood all over the walls? You know what, don't answer that. It looks like the monster cut a bunch of /wires as it tore through this place, maybe if you can reconnect two pairs of terminals (A, B, C, D, E), we can get the circuits running again.")
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/wires.wav"))
@@ -660,7 +749,7 @@ class Voice(commands.Cog):
         filename = ""
 
         if (terminal_one, terminal_two) in self.wiring_data or (terminal_two, terminal_one) in self.wiring_data:
-            filename = "./assets/wires_ss.mp3"
+            filename = "./assets/wires/wires_ss.mp3"
 
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
@@ -680,26 +769,195 @@ class Voice(commands.Cog):
                 source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/wires_right.wav"))
                 ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
+                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+
         elif terminal_one in active_wires and terminal_two in active_wires:
-            filename = "./assets/wires_ssf.mp3"
+            filename = "./assets/wires/wires_ssf.mp3"
 
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             await self.reduce_time(ctx, 0.1)
 
         elif terminal_one in active_wires or terminal_two in active_wires:
-            filename = "./assets/wires_sf.mp3"
+            filename = "./assets/wires/wires_sf.mp3"
 
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             await self.reduce_time(ctx, 0.1)
 
         else:
-            filename = "./assets/wires_ff.mp3"
+            filename = "./assets/wires/wires_ff.mp3"
 
             source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
             ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
             await self.reduce_time(ctx, 0.1)
+
+    ######################
+    #     SMOKESTACK     #
+    ######################
+
+    async def smokestack(self, ctx):
+
+        await ctx.send(file=discord.File('./assets/maps/smokestack.png'))
+
+        await ctx.send("This is the base of the main smokestack. There are 5 main pipes in here that we need to look out for. I think they're over to your left. Now THAT is a lot of dammage. It may seem crude, but you have some Flex Tape in your pack. If you can seal up those claw marks on the correct pipes, the vents should be able to re-open and prevent this place from over running with toxic gas. Just listen in and try what you can.")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/smokestack.wav"))
+        ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+        await ctx.send("\n**Commands**:\n/release {int}\n/flextape {int}")
+
+    @commands.command()
+    async def release(self, ctx, stack_number):
+
+        if self.current_game != 7:
+            await ctx.send("Wrong command! You are not in the Smokestack Room.")
+            return
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        filename = "./assets/steam.mp3"
+        if int(stack_number) in self.smokestack_data:
+            filename = "./assets/steam_down.mp3"
+
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
+        ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+    @commands.command()
+    async def flextape(self, ctx, stack_number):
+
+        if self.current_game != 7:
+            await ctx.send("Wrong command! You are not in the Smokestack Room.")
+            return
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        if int(stack_number) in self.smokestack_data:
+
+            if len(self.smokestack_status) == 0:
+                self.smokestack_status.append(int(stack_number))
+                await ctx.send("That one sounds good now. Try to check for any other busted pipes.")
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/smoke1.wav"))
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+            elif len(self.smokestack_status) == 1:
+
+                self.completion[self.current_game - 1] = True
+
+                await ctx.send("That's the power of Flex Tape baby. Alright, getting those vents open is one less thing to kill the next people that come in here. Good job.")
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/smoke2.wav"))
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+
+        else:
+
+            await ctx.send("No, I don't think taping up that one made any difference. Try taping up one of the others.")
+            await self.reduce_time(ctx, 0.5)
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/smoke0.wav"))
+            ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+    #########################
+    #     CHEMISTRY LAB     #
+    #########################
+
+    async def chemistry_lab(self, ctx):
+
+        await ctx.send(file=discord.File('./assets/maps/chemlab.png'))
+
+        await ctx.send("Welcome to the Chemistry Lab. This is where things **get cooking** in the factory. For this room, you will need to /listen carefully for the number of dings each of the three reactions (A, B, C) make in a fairly small amount of time. It shouldn't be too hard, unless your memory is a little hazy. Nonetheless, I am wishing you luck.")
+        source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chemlab.wav"))
+        ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+
+        await ctx.send("\n**Commands**:\n/listen {char}\n/count {char} {int}")
+
+    @commands.command()
+    async def listen(self, ctx, box_character):
+
+        if self.current_game != 8:
+            await ctx.send("Wrong command! You are not in the Chemistry Lab.")
+            return
+
+        box_character = box_character.upper()
+
+        pitches = list((1, 2, 3, 4, 5, 6, 7))
+        num_sounds = 0
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        if box_character == "A":
+            num_sounds = self.chemistry_data[0]
+        elif box_character == "B":
+            num_sounds = self.chemistry_data[1]
+        elif box_character == "C":
+            num_sounds = self.chemistry_data[2]
+        else:
+            await ctx.send("Please choose a valid box (A, B, C)!")
+            return
+
+        base_file = "./assets/pitch/pitch"
+        notes = list(random.choices(pitches, k=num_sounds))
+
+        for i in range(num_sounds):
+            sound = base_file + str(notes[i]) + ".mp3"
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(sound))
+            ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+            time.sleep(random.randrange(2, 11)/10)
+            ctx.voice_client.stop()
+
+    @commands.command()
+    async def count(self, ctx, box_character, count_num):
+
+        if self.current_game != 8:
+            await ctx.send("Wrong command! You are not in the Chemistry Lab.")
+            return
+
+        box_character = box_character.upper()
+        count_num = int(count_num)
+
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+
+        got_right = False
+
+        if box_character == "A":
+            if count_num == self.chemistry_data[0]:
+                self.chemistry_status += 1
+                got_right = True
+        elif box_character == "B":
+            if count_num == self.chemistry_data[1]:
+                self.chemistry_status += 1
+                got_right = True
+        elif box_character == "C":
+            if count_num == self.chemistry_data[2]:
+                self.chemistry_status += 1
+                got_right = True
+        else:
+            await ctx.send("Please choose a valid box (A, B, C)!")
+            return
+
+        if got_right:
+            if self.chemistry_status == 3:
+                await ctx.send("Congrats, you got them all! Now get moving.")
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem3.wav"))
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+                self.completion[self.current_game - 1] = True
+                if self.check_finish(): await ctx.send("**All rooms completed! Head to the entrance and /getout!**")
+            elif self.chemistry_status == 2:
+                await ctx.send("Perfect, now just one last reaction, and you'll be all set.")
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem1.wav"))
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+            elif self.chemistry_status == 1:
+                await ctx.send("Well done! Now just two more to go.")
+                source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem2.wav"))
+                ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
+        else:
+            await ctx.send("That isn't exactly it. Are you not finding my jokes funny because I'm not seeing any reaction. Keep trying though, you'll get it no time.")
+            await self.reduce_time(ctx, 0.5)
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio("./assets/dialogue/chem0.wav"))
+            ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
     ################
     #     MISC     #
@@ -714,13 +972,15 @@ class Voice(commands.Cog):
         source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(filename))
         ctx.voice_client.play(source, after=lambda e: print('Player error: %s' % e) if e else None)
 
-    # @commands.Cog.listener()
-    # async def on_command_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.CommandInvokeError):
-    #         await ctx.send("*Make sure your command includes ALL the CORRECT inputs! (Scroll up if needed.)*")
-    #     else:
-    #         print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
-    #         traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument) or isinstance(error, commands.CommandInvokeError):
+            await ctx.send("*Make sure your command includes ALL the CORRECT inputs! Try /map if you're lost.*")
+        elif isinstance(error, commands.CommandNotFound):
+            await ctx.send("*Command not found. Try /map if you're lost.*")
+        else:
+            print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+            traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 def setup(client):
     client.add_cog(Voice(client))
